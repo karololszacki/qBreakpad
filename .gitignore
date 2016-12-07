@@ -31,3 +31,5 @@ Makefile*
 *.dmp
 *.bak
 docs/html/
+
+_g/*

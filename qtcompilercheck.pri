@@ -22,7 +22,7 @@ else {
     }
 }
 
-osx {
+osx|ios {
     COMPILER_VERSION=clang
 }
 
@@ -134,5 +134,7 @@ UI_DIR = $$PWD/$${BUILD_PATH}/_u
 UI_SOURCES_DIR = $$PWD/$${BUILD_PATH}/_u
 RCC_DIR = $$PWD/$${BUILD_PATH}/_r
 
-message($${QMAKESPEC})
-message(qt compiler checks: $${COMPILER_VERSION})
+message("QMAKESPEC:" $${QMAKESPEC})
+message(Compiler version: $${COMPILER_VERSION})
+message(Qt version: $${QT_VERSION})
+message(Dependency root: $${BUILD_LIBRARIES_ROOT})

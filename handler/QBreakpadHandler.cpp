@@ -34,6 +34,15 @@
 #include "client/windows/handler/exception_handler.h"
 #endif
 
+bool defaultCallback(const wchar_t * ,
+                     const wchar_t * ,
+                     bool succeeded)
+{
+    return succeeded;
+}
+
+QBreakPadCallback cb = &defaultCallback;
+
 #if defined(Q_OS_WIN32)
 bool DumpCallback(const wchar_t* dump_dir,
                                     const wchar_t* minidump_id,
@@ -66,15 +75,15 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 
 #if defined(Q_OS_WIN32)
     QString path = QString::fromWCharArray(dump_dir) + QLatin1String("/") + QString::fromWCharArray(minidump_id);
-    qDebug("%s, dump path: %s\n", succeeded ? "Succeed to write minidump" : "Failed to write minidump", qPrintable(path));
+    qError("%s, dump path: %s", succeeded ? "Succeed to write minidump" : "Failed to write minidump", qPrintable(path));
 #elif defined(Q_OS_MAC)
     QString path = QString::fromUtf8(dump_dir) + QLatin1String("/") + QString::fromUtf8(minidump_id);
-    qDebug("%s, dump path: %s\n", succeeded ? "Succeed to write minidump" : "Failed to write minidump", qPrintable(path));
+    qError("%s, dump path: %s", succeeded ? "Succeed to write minidump" : "Failed to write minidump", qPrintable(path));
 #else
-    qDebug("%s, dump path: %s\n", succeeded ? "Succeed to write minidump" : "Failed to write minidump", descriptor.path());
+    qError("%s, dump path: %s", succeeded ? "Succeed to write minidump" : "Failed to write minidump", descriptor.path());
 #endif
 
-    return succeeded;
+    return cb(dump_dir, minidump_id, succeeded);
 }
 
 class QBreakpadHandlerPrivate
@@ -161,6 +170,11 @@ void QBreakpadHandler::setUploadUrl(const QUrl &url)
         return;
 
     d->uploadUrl = url;
+}
+
+void QBreakpadHandler::setCallback(QBreakPadCallback c)
+{
+    cb = c;
 }
 
 void QBreakpadHandler::sendDumps()

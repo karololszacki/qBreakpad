@@ -29,6 +29,10 @@ namespace google_breakpad {
     class MinidumpDescriptor;
 }
 
+typedef bool (*QBreakPadCallback)(const wchar_t * dump_path,
+                                  const wchar_t * minidump_id,
+                                  bool succeeded);
+
 class QBreakpadHandlerPrivate;
 
 class QBreakpadHandler: public QObject
@@ -46,6 +50,8 @@ public:
 
     void setDumpPath(const QString& path);
     void setUploadUrl(const QUrl& url);
+
+    void setCallback(QBreakPadCallback cb);
 
 public slots:
     void sendDumps();

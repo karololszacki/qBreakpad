@@ -7,6 +7,9 @@ CONFIG += warn_on thread exceptions rtti stl
 QT -= gui
 QT += core network
 
+message()
+message("----------------- qBreakpad -----------------")
+
 include ($$PWD/../qtcompilercheck.pri)
 
 ### qBreakpad config

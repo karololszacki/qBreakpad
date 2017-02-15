@@ -21,9 +21,7 @@ include($$PWD/../third_party/breakpad.pri)
 HEADERS += \
     $$PWD/singletone/call_once.h \
     $$PWD/singletone/singleton.h \
-    $$PWD/QBreakpadHandler.h \
-    $$PWD/QBreakpadHttpUploader.h
+    $$PWD/QBreakpadHandler.h
 
 SOURCES += \
-    $$PWD/QBreakpadHandler.cpp \
-    $$PWD/QBreakpadHttpUploader.cpp
+    $$PWD/QBreakpadHandler.cpp

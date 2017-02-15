@@ -53,6 +53,8 @@ public:
 
     void setCallback(QBreakPadCallback cb);
 
+    bool InvokeDump();
+
 public slots:
     void sendDumps();
 

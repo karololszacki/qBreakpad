@@ -178,6 +178,11 @@ void QBreakpadHandler::setCallback(QBreakPadCallback c)
     cb = c;
 }
 
+bool QBreakpadHandler::InvokeDump()
+{
+    return d->pExptHandler->WriteMinidump();
+}
+
 void QBreakpadHandler::sendDumps()
 {
     if(!d->dumpPath.isNull() && !d->dumpPath.isEmpty()) {

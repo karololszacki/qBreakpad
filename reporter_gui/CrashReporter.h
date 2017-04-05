@@ -25,6 +25,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QByteArray>
+#include <QCoreApplication>
 
 namespace Ui
 {
@@ -50,6 +51,10 @@ public:
     void setReportData(const QByteArray& name, const QByteArray& content);
     void setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName);
 
+    void setApplicationData( const QCoreApplication* app );
+    const char* applicationName() const { return m_applicationName; }
+    const char* applicationVersion() const { return m_applicationVersion; }
+
 private:
     Ui::CrashReporter* m_ui;
 #ifdef Q_OS_LINUX
@@ -60,6 +65,9 @@ private:
     QNetworkRequest* m_request;
     QNetworkReply* m_reply;
     QUrl m_url;
+
+    const char* m_applicationName;
+    const char* m_applicationVersion;
 
     QMap < QByteArray, QByteArray > m_formContents;
     QMap < QByteArray, QByteArray > m_formContentTypes;

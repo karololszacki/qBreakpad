@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = reporter_gui
 #Application version
-#VERSION = 0.4.0
+VERSION = 0.4.0
 
 CONFIG += warn_on thread exceptions rtti stl
 QT += gui core widgets network

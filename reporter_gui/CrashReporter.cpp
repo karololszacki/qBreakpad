@@ -247,3 +247,19 @@ CrashReporter::setReportData(const QByteArray& name, const QByteArray& content, 
         m_formFileNames.insert( name, fileName );
     }
 }
+
+void CrashReporter::setApplicationData( const QCoreApplication* app )
+{
+    char* cappname;
+    std::string sappname = app->applicationName().toStdString();
+    cappname = new char[ sappname.size() + 1 ];
+    strcpy( cappname, sappname.c_str() );
+    m_applicationName = cappname;
+
+    char* cappver;
+    std::string sappver = app->applicationVersion().toStdString();
+    qDebug() << app->applicationVersion();
+    cappver = new char[ sappver.size() + 1 ];
+    strcpy( cappver, sappver.c_str() );
+    m_applicationVersion = cappver;
+}

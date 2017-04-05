@@ -7,7 +7,7 @@
 
 const char* k_usage =
     "Usage:\n"
-    "  CrashReporter <dumpFilePath>\n";
+    "  CrashReporter <dumpFilePath> <applicationName> <applicationVersion> <applicationBuild>\n";
 
 int main(int argc, char* argv[])
 {
@@ -18,20 +18,24 @@ int main(int argc, char* argv[])
 
     QApplication app(argc, argv);
 
-//    if ( app.arguments().size() != 2 )
-//    {
-//        std::cout << k_usage;
-//        return 1;
-//    }
+    if ( app.arguments().size() != 5 )
+    {
+        std::cout << k_usage;
+        return 1;
+    }
 
     CrashReporter reporter( QUrl( CRASHREPORTER_SUBMIT_URL ),  app.arguments() );
 
-    reporter.setWindowTitle( CRASHREPORTER_PRODUCT_NAME );
-    reporter.setText("<html><head/><body><p><span style=\"font-weight:600;\">Sorry!</span> " CRASHREPORTER_PRODUCT_NAME " crashed. Please tell us about it! " CRASHREPORTER_PRODUCT_NAME " has created an error report for you that can help improve the stability in the future. You can now send this report directly to the " CRASHREPORTER_PRODUCT_NAME " developers.</p><p>Can you tell us what you were doing when this happened?</p></body></html>");
+    QString applicationName = app.arguments().value( 2 );
+    QString applicationVersion = app.arguments().value( 3 );
+    QString applicationBuild = app.arguments().value( 4 );
 
-    reporter.setReportData( "BuildID", CRASHREPORTER_BUILD_ID );
-    reporter.setReportData( "ProductName",  CRASHREPORTER_PRODUCT_NAME );
-    reporter.setReportData( "Version", CRASHREPORTER_VERSION_STRING );
+    reporter.setWindowTitle( applicationName + " Diagnostics");
+    reporter.setText("<html><head/><body><p><span style=\"font-weight:600;\">Sorry!</span> " + applicationName + " stopped. Please tell us about it! We've created an error report for you that can help improve the stability in the future. You can now send this report directly to the " + applicationName + " developers.</p><p>Can you tell us what you were doing when this happened?</p></body></html>");
+
+    reporter.setReportData( "ProductName",  applicationName.toUtf8() );
+    reporter.setReportData( "Version", applicationVersion.toUtf8() );
+    reporter.setReportData( "BuildID", applicationBuild.toUtf8() );
     reporter.setReportData( "ReleaseChannel", CRASHREPORTER_RELEASE_CHANNEL);
 
     reporter.show();

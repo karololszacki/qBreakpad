@@ -20,6 +20,7 @@
 #ifndef QBREAKPAD_HANDLER_H
 #define QBREAKPAD_HANDLER_H
 
+#include <QCoreApplication>
 #include <QString>
 #include <QUrl>
 #include "singletone/singleton.h"
@@ -51,6 +52,12 @@ public:
 
     void setUploadUrl(const QUrl& url);
 
+    void setApplicationData( const QCoreApplication* app, const QString& appBuildString );
+    const char* applicationName() const { return m_applicationName; }
+    const char* executablePath() const { return m_executablePath; }
+    const char* applicationVersion() const { return m_applicationVersion; }
+    const char* applicationBuild() const { return m_applicationBuild; }
+
 public slots:
     void sendDumps();
 
@@ -58,6 +65,11 @@ private:
     QBreakpadHandlerPrivate* d;
     const char* m_crashReporterChar; // yes! It MUST be const char[]
     const wchar_t* m_crashReporterWChar;
+
+    const char* m_applicationName;
+    const char* m_executablePath;
+    const char* m_applicationVersion;
+    const char* m_applicationBuild;
 };
 #define QBreakpadInstance Singleton<QBreakpadHandler>::instance()
 

@@ -53,19 +53,32 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
                                     bool succeeded)
 #endif
 {
-#ifdef Q_OS_WIN
-    if ( !succeeded )
-        return false;
-
     // DON'T USE THE HEAP!!!
     // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
 
+    if ( !succeeded )
+    {
+        printf("Could not write crash dump file");
+        return false;
+    }
 
-    const wchar_t* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterWChar();
-    if ( /*!s_active ||*/ wcslen( crashReporter ) == 0 )
+    const char* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterChar();
+    if ( /*!s_active ||*/ strlen( crashReporter ) == 0 )
         return false;
 
-    wchar_t command[MAX_PATH * 3 + 6];
+    const char* applicationName = static_cast<QBreakpadHandler*>(context)->applicationName();
+    if ( strlen( applicationName ) == 0 )
+        return false;
+    const char* applicationVersion = static_cast<QBreakpadHandler*>(context)->applicationVersion();
+    if ( strlen( applicationVersion ) == 0 )
+        return false;
+    const char* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuild();
+    if ( strlen( applicationBuild ) == 0 )
+        return false;
+
+#ifdef Q_OS_WIN
+
+    wchar_t command[MAX_PATH * 5 + 6];
     wcscpy( command, crashReporter);
     wcscat( command, L" \"");
     wcscat( command, dump_dir );
@@ -73,7 +86,17 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     wcscat( command, minidump_id );
     wcscat( command, L".dmp\"" );
 
+    wcscat( command, L" \"");
+    wcscat( command, applicationName );
+    wcscat( command, L"\"" );
 
+    wcscat( command, L" \"");
+    wcscat( command, applicationVersion );
+    wcscat( command, L"\"" );
+
+    wcscat( command, L" \"");
+    wcscat( command, applicationBuild );
+    wcscat( command, L"\"" );
 
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -94,15 +117,6 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     return succeeded;
 #else
 
-    if ( !succeeded )
-    {
-        printf("Could not write crash dump file");
-        return false;
-    }
-
-    // DON'T USE THE HEAP!!!
-    // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
-
 #ifdef Q_OS_LINUX
     const char* path = descriptor.path();
 #else // Q_OS_MAC
@@ -118,52 +132,19 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 
     printf("Dump file was written to: %s\n", path);
 
-    const char* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterChar();
-    if ( /*!s_active ||*/ strlen( crashReporter ) == 0 )
-        return false;
-
-#ifdef Q_OS_LINUX
-    const char* applicationName = static_cast<Handler*>(context)->applicationName();
-    if ( strlen( applicationName ) == 0 )
-        return false;
-    const char* executablePath = static_cast<Handler*>(context)->executablePath();
-    if ( strlen( executablePath ) == 0 )
-        return false;
-    const char* applicationVersion = static_cast<Handler*>(context)->applicationVersion();
-    if ( strlen( applicationVersion ) == 0 )
-        return false;
-
-    char procid[17];
-    sprintf( procid, "%d", static_cast<Handler*>(context)->pid() );
-    char signum[17];
-    sprintf( signum, "%d", static_cast<Handler*>(context)->signalNumber() );
-    char tid[17];
-    sprintf( tid, "%d", static_cast<Handler*>(context)->threadId() );
-#endif
-
     pid_t pid = fork();
     if ( pid == -1 ) // fork failed
         return false;
     if ( pid == 0 )
     {
         // we are the fork
-#ifdef Q_OS_LINUX
         execl( crashReporter,
                crashReporter,
                path,
-               procid,
-               signum,
                applicationName,
-               executablePath,
                applicationVersion,
-               tid,
+               applicationBuild,
                (char*) 0 );
-#else
-        execl( crashReporter,
-               crashReporter,
-               path,
-               (char*) 0 );
-#endif
 
         // execl replaces this process, so no more code will be executed
         // unless it failed. If it failed, then we should return false.
@@ -178,11 +159,6 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 #endif
 
     // we called fork()
-
-//    QByteArray ba = path.toLatin1();
-//    const char *c_str = ba.data();
-//    execl("/Users/patrick/clients/saferetrieve/sky-shepherd-desktop/qt-project/crashhandler/qBreakpad/build-reporter_gui-Desktop_Qt_5_8_0_clang_64bit-Debug/reporter_gui.app/Contents/MacOS/reporter_gui", c_str);
-
     return succeeded;
 #endif
 }
@@ -258,9 +234,6 @@ void QBreakpadHandler::setCrashReporter( const QString& crashReporter )
     QString localReporter = QString( "%1/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
     QString globalReporter = QString( "%1/../libexec/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
 
-    qDebug() << localReporter;
-    qDebug() << globalReporter;
-
     if ( QFileInfo( localReporter ).exists() )
         crashReporterPath = localReporter;
     else if ( QFileInfo( globalReporter ).exists() )
@@ -278,7 +251,7 @@ void QBreakpadHandler::setCrashReporter( const QString& crashReporter )
     strcpy( creporter, sreporter.c_str() );
     m_crashReporterChar = creporter;
 
-    qDebug() << "m_crashReporterChar: " << m_crashReporterChar;
+//    qDebug() << "m_crashReporterChar: " << m_crashReporterChar;
 
     // cache reporter path as wchart_t*
     wchar_t* wreporter;
@@ -286,7 +259,7 @@ void QBreakpadHandler::setCrashReporter( const QString& crashReporter )
     wreporter = new wchar_t[ wsreporter.size() + 10 ];
     wcscpy( wreporter, wsreporter.c_str() );
     m_crashReporterWChar = wreporter;
-    std::wcout << "m_crashReporterWChar: " << m_crashReporterWChar;
+//    std::wcout << "m_crashReporterWChar: " << m_crashReporterWChar;
 }
 
 QString QBreakpadHandler::uploadUrl() const
@@ -311,6 +284,33 @@ void QBreakpadHandler::setUploadUrl(const QUrl &url)
         return;
 
     d->uploadUrl = url;
+}
+
+void QBreakpadHandler::setApplicationData( const QCoreApplication* app, const QString& appBuildString )
+{
+    char* cappname;
+    std::string sappname = app->applicationName().toStdString();
+    cappname = new char[ sappname.size() + 1 ];
+    strcpy( cappname, sappname.c_str() );
+    m_applicationName = cappname;
+
+    char* cepath;
+    std::string sepath = app->applicationFilePath().toStdString();
+    cepath = new char[ sepath.size() + 1 ];
+    strcpy( cepath, sepath.c_str() );
+    m_executablePath = cepath;
+
+    char* cappver;
+    std::string sappver = app->applicationVersion().toStdString();
+    cappver = new char[ sappver.size() + 1 ];
+    strcpy( cappver, sappver.c_str() );
+    m_applicationVersion = cappver;
+
+    char* cappbuild;
+    std::string sappbuild = appBuildString.toStdString();
+    cappbuild = new char[ sappbuild.size() + 1 ];
+    strcpy( cappbuild, sappbuild.c_str() );
+    m_applicationBuild = cappbuild;
 }
 
 void QBreakpadHandler::sendDumps()

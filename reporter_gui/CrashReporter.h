@@ -52,8 +52,12 @@ public:
     void setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName);
 
     void setApplicationData( const QCoreApplication* app );
+    void setExecutablePath(const QString& executablePath );
     const char* applicationName() const { return m_applicationName; }
+    const char* executablePath() const { return m_executablePath; }
     const char* applicationVersion() const { return m_applicationVersion; }
+
+protected:
 
 private:
     Ui::CrashReporter* m_ui;
@@ -61,12 +65,15 @@ private:
     BacktraceGenerator* m_btg;
 #endif
 
+    void relaunchApplication();
+
     QString m_minidump_file_path;
     QNetworkRequest* m_request;
     QNetworkReply* m_reply;
     QUrl m_url;
 
     const char* m_applicationName;
+    const char* m_executablePath;
     const char* m_applicationVersion;
 
     QMap < QByteArray, QByteArray > m_formContents;

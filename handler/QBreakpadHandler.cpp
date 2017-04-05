@@ -75,6 +75,9 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     const char* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuild();
     if ( strlen( applicationBuild ) == 0 )
         return false;
+    const char* executablePath = static_cast<QBreakpadHandler*>(context)->executablePath();
+//    if ( strlen( executablePath ) == 0 )
+//        return false;
 
 #ifdef Q_OS_WIN
 
@@ -97,6 +100,12 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     wcscat( command, L" \"");
     wcscat( command, applicationBuild );
     wcscat( command, L"\"" );
+
+    if ( strlen( executablePath ) > 0 ) {
+        wcscat( command, L" \"");
+        wcscat( command, executablePath );
+        wcscat( command, L"\"" );
+    }
 
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -137,6 +146,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
         return false;
     if ( pid == 0 )
     {
+        qDebug() << "launching with" << executablePath;
         // we are the fork
         execl( crashReporter,
                crashReporter,
@@ -144,6 +154,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
                applicationName,
                applicationVersion,
                applicationBuild,
+               executablePath,
                (char*) 0 );
 
         // execl replaces this process, so no more code will be executed

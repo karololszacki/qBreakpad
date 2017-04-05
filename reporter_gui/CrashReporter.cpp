@@ -33,10 +33,10 @@
 #include <QDateTime>
 #include <QStandardPaths>
 
+#include <QProcess>
+
 #include "ui_CrashReporter.h"
 
-
-// #define LOGFILE TomahawkUtils::appLogDir().filePath( "Tomahawk.log" ).toLocal8Bit()
 #define RESPATH ":/data/"
 #define PRODUCT_NAME "WaterWolf"
 
@@ -77,6 +77,13 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
     m_ui->progressLabel->setText( QString() );
     connect( m_ui->sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
 
+    connect(this, &QDialog::accepted,  [=]() {
+        relaunchApplication();
+    });
+    connect(this, &QDialog::rejected,  [=]() {
+        relaunchApplication();
+    });
+
     adjustSize();
     setFixedSize( size() );
 }
@@ -88,6 +95,19 @@ CrashReporter::~CrashReporter()
     delete m_reply;
 }
 
+
+void CrashReporter::
+relaunchApplication()
+{
+    if (executablePath() != NULL) {
+        QProcess *process=new QProcess(this);
+        bool res;
+        process->startDetached(executablePath());
+        res = process->waitForFinished();
+        delete process;
+        process = NULL;
+    }
+}
 
 void
 CrashReporter::setLogo( const QPixmap& logo )
@@ -258,8 +278,16 @@ void CrashReporter::setApplicationData( const QCoreApplication* app )
 
     char* cappver;
     std::string sappver = app->applicationVersion().toStdString();
-    qDebug() << app->applicationVersion();
     cappver = new char[ sappver.size() + 1 ];
     strcpy( cappver, sappver.c_str() );
     m_applicationVersion = cappver;
+}
+
+void CrashReporter::setExecutablePath(const QString& executablePath )
+{
+    char* cepath;
+    std::string sepath = executablePath.toStdString();
+    cepath = new char[ sepath.size() + 1 ];
+    strcpy( cepath, sepath.c_str() );
+    m_executablePath = cepath;
 }

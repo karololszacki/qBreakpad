@@ -62,7 +62,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 
 
     const wchar_t* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterWChar();
-    if ( !s_active || wcslen( crashReporter ) == 0 )
+    if ( /*!s_active ||*/ wcslen( crashReporter ) == 0 )
         return false;
 
     wchar_t command[MAX_PATH * 3 + 6];

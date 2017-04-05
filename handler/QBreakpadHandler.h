@@ -44,7 +44,11 @@ public:
     QString dumpPath() const;
     QStringList dumpFileList() const;
 
-    void setDumpPath(const QString& path);
+    void setDumpPathAndHandlerApp(const QString& dumpPath, const QString& handlerPath);
+    void setCrashReporter(const QString& crashReporter);
+    const char* crashReporterChar() const { return m_crashReporterChar; }
+    const wchar_t* crashReporterWChar() const { return m_crashReporterWChar; }
+
     void setUploadUrl(const QUrl& url);
 
 public slots:
@@ -52,6 +56,8 @@ public slots:
 
 private:
     QBreakpadHandlerPrivate* d;
+    const char* m_crashReporterChar; // yes! It MUST be const char[]
+    const wchar_t* m_crashReporterWChar;
 };
 #define QBreakpadInstance Singleton<QBreakpadHandler>::instance()
 

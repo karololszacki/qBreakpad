@@ -78,6 +78,7 @@ private:
 #endif
 
     void relaunchApplication();
+    void handleOnDone(QByteArray replyBytes, const QString& ticketKey = "");
 
     QNetworkReply * postRequest(const QString &path, const QJsonObject &json, const QVariant &headerValue="application/json");
     QNetworkReply * postRaw(const QString &path, QStringList files);
@@ -87,6 +88,8 @@ private:
     QString jiraPassword;
     QString jiraProjectKey;
     QString jiraTypeId;
+
+    bool relaunchEnabled;
 
     QString m_minidump_file_path;
     QNetworkRequest* m_request;

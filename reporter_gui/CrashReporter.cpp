@@ -79,11 +79,19 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
 
     m_minidump_file_path = args.value( 1 );
 
+    m_ui->relaunchCheckbox->setText("Relaunch " + args.value(2));
+
     //hide until "send report" has been clicked
     m_ui->progressBox->setVisible( false );
     m_ui->progressLabel->setVisible( true );
     m_ui->progressLabel->setText( QString() );
     connect( m_ui->sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
+
+    relaunchEnabled = true;
+    m_ui->relaunchCheckbox->setChecked(relaunchEnabled);
+    connect( m_ui->relaunchCheckbox, &QCheckBox::toggled, [=](bool checked) {
+       relaunchEnabled = checked;
+    });
 
     connect(this, &QDialog::accepted,  [=]() {
         relaunchApplication();
@@ -94,6 +102,8 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
 
     adjustSize();
     setFixedSize( size() );
+
+    m_ui->bottomLabel->clear();
 }
 
 
@@ -107,7 +117,7 @@ CrashReporter::~CrashReporter()
 void CrashReporter::
 relaunchApplication()
 {
-    if (executablePath() != NULL) {
+    if (relaunchEnabled && executablePath() != NULL) {
         QProcess *process=new QProcess(this);
         bool res;
         process->startDetached(executablePath());
@@ -149,7 +159,7 @@ contents( const QString& path )
 void
 CrashReporter::send()
 {
-    if (jiraHostname.size() > 0) {
+    if (!jiraHostname.isEmpty()) {
         sendToJira();
         return;
     }
@@ -215,29 +225,41 @@ CrashReporter::onProgress( qint64 done, qint64 total )
     }
 }
 
-
 void
 CrashReporter::onDone()
 {
-    QByteArray data = m_reply->readAll();
+    handleOnDone(m_reply->readAll());
+}
+
+void
+CrashReporter::handleOnDone(QByteArray replyBytes, const QString& ticketKey)
+{
     m_ui->progressBar->setValue( m_ui->progressBar->maximum() );
     m_ui->button->setText( tr( "Close" ) );
 
-    QString const response = QString::fromUtf8( data );
+    QString const response = QString::fromUtf8( replyBytes );
     qDebug() << "RESPONSE:" << response;
 
-    if ( ( m_reply->error() != QNetworkReply::NoError ) || !response.startsWith( "CrashID=" ) )
+    if ( ( m_reply->error() != QNetworkReply::NoError )
+         || (jiraHostname.isEmpty() && !response.startsWith( "CrashID=" )) )
     {
         onFail( m_reply->error(), m_reply->errorString() );
     }
     else
     {
-        QString crashId = response.split("\n").at(0).split("=").at(1);
+        if (response.startsWith( "CrashID=" )) {
+            QString crashId = response.split("\n").at(0).split("=").at(1);
 
-        m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to crash <b>%1</b> in bug reports." ).arg(crashId) );
+            m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to crash <b>%1</b> in bug reports." ).arg(crashId) );
+        } else {
+            if (ticketKey.isEmpty()) {
+                m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>." ));
+            } else {
+                m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to ticket <b>%1</b>." ).arg(ticketKey) );
+            }
+        }
     }
 }
-
 
 void
 CrashReporter::onFail( int error, const QString& errorString )
@@ -347,13 +369,16 @@ void CrashReporter::sendToJira()
 
     connect(m_reply, &QNetworkReply::uploadProgress, this, &CrashReporter::onProgress);
 
-    connect(m_reply, &QNetworkReply::finished, [files, this]() {
+    QMetaObject::Connection c;
+    c = connect(m_reply, &QNetworkReply::finished, [files, this, c]() {
+        disconnect(c);
+
+        QByteArray strReply = m_reply->readAll();
         if (m_reply->error() != QNetworkReply::NoError) {
             // some error
-//            onDone();
+            handleOnDone(strReply);
             m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + "\nsome error? " + m_reply->readAll());
         } else {
-            QByteArray strReply = m_reply->readAll();
             QJsonObject responseObj = QJsonDocument::fromJson(strReply).object();
 
             QJsonValue value;
@@ -363,20 +388,21 @@ void CrashReporter::sendToJira()
                 QString ticketKey = value.toString();
 
                 if(!files.isEmpty()) {
-                    QNetworkReply *reply = postRaw(QString("%1%2/attachments").arg(API_ISSUE_PATH).arg(ticketKey), files);
-                    connect(reply, &QNetworkReply::finished, [reply, this]() {
-                        onDone();
+                    m_reply = postRaw(QString("%1%2/attachments").arg(API_ISSUE_PATH).arg(ticketKey), files);
+                    connect(m_reply, &QNetworkReply::uploadProgress, this, &CrashReporter::onProgress);
+                    connect(m_reply, &QNetworkReply::finished, [strReply, this, ticketKey]() {
+                        handleOnDone(strReply, ticketKey);
 
-                        if (reply->error() != QNetworkReply::NoError) {
+                        if (m_reply->error() != QNetworkReply::NoError) {
                             // some error
-                            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + "\nattachment error? " + reply->readAll());
+                            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + "\nattachment error? " + strReply);
                         }
                     });
                 } else {
-                    onDone();
+                    handleOnDone(strReply, ticketKey);
                 }
             } else {
-                onDone();
+                handleOnDone(strReply);
             }
         }
     });

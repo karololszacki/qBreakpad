@@ -32,6 +32,7 @@
 #include <QDir>
 #include <QDateTime>
 #include <QStandardPaths>
+#include <QHttpMultiPart>
 
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -42,6 +43,10 @@
 
 #define RESPATH ":/data/"
 #define PRODUCT_NAME "WaterWolf"
+
+#define BASE_PROTOCOL   "https"
+#define BASE_PORT       443
+#define API_ISSUE_PATH  "/rest/api/2/issue/"
 
 CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
 : m_ui( 0 )
@@ -144,6 +149,11 @@ contents( const QString& path )
 void
 CrashReporter::send()
 {
+    if (jiraHostname.size() > 0) {
+        sendToJira();
+        return;
+    }
+
     // TODO: check if dump file actually exists ...
 
     // add minidump file
@@ -247,8 +257,8 @@ CrashReporter::onSendButton()
     m_ui->commentTextEdit->setEnabled( false );
 
     setReportData( "Comments", m_ui->commentTextEdit->toPlainText().toUtf8() );
-    adjustSize();
-    setFixedSize( size() );
+//    adjustSize();
+//    setFixedSize( size() );
 
     QTimer::singleShot( 0, this, SLOT( send() ) );
 }
@@ -295,138 +305,151 @@ void CrashReporter::setExecutablePath(const QString& executablePath )
     m_executablePath = cepath;
 }
 
-void CrashReporter::sendToJira()
+void CrashReporter::setJiraConfiguration(
+        const QString& jiraHostname,
+        const QString& jiraUsername,
+        const QString& jiraPassword,
+        const QString& jiraProjectKey,
+        const QString& jiraTypeId)
 {
-//    QStringList files;
-
-//    QJsonObject ticketObj;
-
-//    QJsonObject fieldsObj;
-//    fieldsObj["summary"] = instance->_dialog->getSubject();
-//    fieldsObj["description"] = tr("%1\n\n--\n%2\n%3 : %4").arg(instance->_dialog->getNotes()).arg(Utilities::getApplicationDescription(true)).arg(username).arg(session);
-
-//    QJsonObject projectObj;
-//    projectObj["key"] = "DIAG";
-//    fieldsObj["project"] = projectObj;
-
-//    const int typeIndex = instance->_dialog->getTypeIndex();
-//    QString typeID = "10005";
-//    if (typeIndex == 1) { // support requested
-//        typeID = "10007";
-//    } else if (typeIndex == 2) { // feature ideas
-//        typeID = "10006";
-//    } else { // test logs
-//        // nothing to do, current value is what we want
-//    }
-
-//    QJsonObject issueTypeObj;
-//    issueTypeObj["id"] = typeID;
-////    issueTypeObj["name"] = "Story";
-//    fieldsObj["issuetype"] = issueTypeObj;
-
-//    ticketObj["fields"] = fieldsObj;
-
-//    QNetworkReply *reply = instance->postRequest(API_ISSUE_PATH, ticketObj);
-
-//    QMetaObject::Connection c1;
-//    c1 = connect(reply, &QNetworkReply::finished, [reply, files, instance, c1]() {
-//        disconnect(c1);
-
-//        if (reply->error() != QNetworkReply::NoError) {
-//            // some error
-//            instance->handleReportSubmitted();
-//        } else {
-//            QByteArray strReply = reply->readAll();
-//            QJsonObject responseObj = QJsonDocument::fromJson(strReply).object();
-
-//            QJsonValue value;
-
-//            value = responseObj.value("key");
-//            if (!value.isUndefined() && value.isString()) {
-//                QString ticketKey = value.toString();
-
-//                if(!files.isEmpty()) {
-//                    QMetaObject::Connection c2;
-//                    QNetworkReply *reply = instance->postRaw(QString("%1%2/attachments").arg(API_ISSUE_PATH).arg(ticketKey), files);
-//                    c2 = connect(reply, &QNetworkReply::finished, [reply, instance, c2]() {
-//                        disconnect(c2);
-
-//                        instance->handleReportSubmitted();
-
-//                        if (reply->error() != QNetworkReply::NoError) {
-//                            // some error
-//                            qDebug() << "attachment error: " << reply->error() << reply->readAll();
-//                        }
-//                    });
-//                } else {
-//                    instance->handleReportSubmitted();
-//                }
-//            } else {
-//                instance->handleReportSubmitted();
-//            }
-//        }
-//    });
+    this->jiraHostname = jiraHostname;
+    this->jiraUsername = jiraUsername;
+    this->jiraPassword = jiraPassword;
+    this->jiraProjectKey = jiraProjectKey;
+    this->jiraTypeId = jiraTypeId;
 }
 
-void prepareRequest(QNetworkRequest &request, const QUrl &url)
+void CrashReporter::sendToJira()
 {
-//    request.setUrl(url);
+    QStringList files;
+    files.append(m_minidump_file_path);
 
-//    QString concatenated = QString("%1:%2").arg(API_USER).arg(API_PASS);
-//    QByteArray data = concatenated.toLocal8Bit().toBase64();
-//    QString headerData = "Basic " + data;
-//    request.setRawHeader("Authorization", headerData.toLocal8Bit());
+    QJsonObject ticketObj;
+
+    QJsonObject fieldsObj;
+    fieldsObj["summary"] = QString(m_formContents.value(REPORT_KEY_PRODUCT_NAME)) + " Crash Report";
+    fieldsObj["description"] = m_ui->commentTextEdit->toPlainText() + "\n" +
+            QString(m_formContents.value(REPORT_KEY_PRODUCT_NAME)) + " " +
+            QString(m_formContents.value(REPORT_KEY_VERSION)) + " " +
+            QString(m_formContents.value(REPORT_KEY_BUILD_ID));
+
+    QJsonObject projectObj;
+    projectObj["key"] = jiraProjectKey;
+    fieldsObj["project"] = projectObj;
+
+    QJsonObject issueTypeObj;
+    issueTypeObj["id"] = jiraTypeId;
+    fieldsObj["issuetype"] = issueTypeObj;
+
+    ticketObj["fields"] = fieldsObj;
+
+    QNetworkReply *reply = postRequest(API_ISSUE_PATH, ticketObj, {});
+
+    connect(reply, &QNetworkReply::uploadProgress, this, &CrashReporter::onProgress);
+
+    connect(reply, &QNetworkReply::finished, [reply, files, this]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            // some error
+            onDone();
+        } else {
+            QByteArray strReply = reply->readAll();
+            QJsonObject responseObj = QJsonDocument::fromJson(strReply).object();
+
+            QJsonValue value;
+
+            value = responseObj.value("key");
+            if (!value.isUndefined() && value.isString()) {
+                QString ticketKey = value.toString();
+
+                if(!files.isEmpty()) {
+                    QMetaObject::Connection c2;
+                    QNetworkReply *reply = postRaw(QString("%1%2/attachments").arg(API_ISSUE_PATH).arg(ticketKey), files);
+                    c2 = connect(reply, &QNetworkReply::finished, [reply, this, c2]() {
+                        disconnect(c2);
+
+                        onDone();
+
+                        if (reply->error() != QNetworkReply::NoError) {
+                            // some error
+                            qDebug() << "attachment error: " << reply->error() << reply->readAll();
+                        }
+                    });
+                } else {
+                    onDone();
+                }
+            } else {
+                onDone();
+            }
+        }
+    });
+}
+
+void prepareRequest(QNetworkRequest &request, const QUrl &url, QString username, QString password)
+{
+    request.setUrl(url);
+
+    QString concatenated = QString("%1:%2").arg(username).arg(password);
+    QByteArray data = concatenated.toLocal8Bit().toBase64();
+    QString headerData = "Basic " + data;
+    request.setRawHeader("Authorization", headerData.toLocal8Bit());
+}
+
+QUrl baseURL(QString apiHostname)
+{
+    return QUrl(QString("%1://%2:%3").arg(BASE_PROTOCOL).arg(apiHostname).arg(BASE_PORT));
 }
 
 QNetworkReply * CrashReporter::postRequest(const QString &path, const QJsonObject &json, const QVariant &headerValue)
 {
-//    QUrl url(baseURL());
-//    url.setPath(path);
+    QUrl url(baseURL(jiraHostname));
+    url.setPath(path);
 
-//    QNetworkRequest request;
-//    prepareRequest(request, url);
+    QNetworkRequest request;
+    prepareRequest(request, url, jiraUsername, jiraPassword);
 
-//    request.setHeader(QNetworkRequest::ContentTypeHeader, headerValue);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, headerValue);
 
-//    const QString body = QJsonDocument(json).toJson(QJsonDocument::Compact);
-//    QByteArray buffer = body.toUtf8();
+    const QString body = QJsonDocument(json).toJson(QJsonDocument::Compact);
+    QByteArray buffer = body.toUtf8();
 
-//    return _qnam->post(request, buffer);
+    QNetworkAccessManager* nam = new QNetworkAccessManager( this );
+    return nam->post(request, buffer);
     return NULL;
 }
 
 QNetworkReply * CrashReporter::postRaw(const QString &path, QStringList files)
 {
-//    QUrl url(baseURL());
-//    url.setPath(path);
+    QUrl url(baseURL(jiraHostname));
+    url.setPath(path);
 
-//    QNetworkRequest request;
-//    prepareRequest(request, url);
-//    request.setRawHeader("X-Atlassian-Token", "nocheck");
+    QNetworkRequest request;
+    prepareRequest(request, url, jiraUsername, jiraPassword);
+    request.setRawHeader("X-Atlassian-Token", "nocheck");
 
-//    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
-//    multiPart->setBoundary("---------------------jasglfuyqwreltjaslgjlkdaghflsdgh");
+    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    multiPart->setBoundary("---------------------jasglfuyqwreltjaslgjlkdaghflsdgh");
 
-//    request.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=" + multiPart->boundary());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=" + multiPart->boundary());
 
-//    foreach(QString filePath, files) {
-//        QFile *file = new QFile(filePath);
-//        if(file->exists()) {
-//            QFileInfo fileInfo(file->fileName());
+    foreach(QString filePath, files) {
+        QFile *file = new QFile(filePath);
+        if(file->exists()) {
+            QFileInfo fileInfo(file->fileName());
 
-//            QHttpPart filePart;
-//            filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=\""+ fileInfo.fileName() + "\""));
+            QHttpPart filePart;
+            filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=\""+ fileInfo.fileName() + "\""));
 
-//            file->open(QIODevice::ReadOnly);
-//            filePart.setBodyDevice(file);
-//            file->setParent(multiPart);
+            file->open(QIODevice::ReadOnly);
+            filePart.setBodyDevice(file);
+            file->setParent(multiPart);
 
-//            multiPart->append(filePart);
-//        }
-//    }
+            multiPart->append(filePart);
+        }
+    }
 
-//    QNetworkReply *reply = _qnam->post(request, multiPart);
-//    multiPart->setParent(reply);
-//    return reply;
+    QNetworkAccessManager* nam = new QNetworkAccessManager( this );
+    QNetworkReply *reply = nam->post(request, multiPart);
+    multiPart->setParent(reply);
+    return reply;
     return NULL;
 }

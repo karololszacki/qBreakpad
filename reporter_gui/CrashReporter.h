@@ -36,6 +36,11 @@ namespace Ui
 class BacktraceGenerator;
 #endif
 
+#define REPORT_KEY_PRODUCT_NAME     "ProductName"
+#define REPORT_KEY_VERSION          "Version"
+#define REPORT_KEY_BUILD_ID         "BuildID"
+#define REPORT_KEY_RELEASE_CHANNEL  "ReleaseChannel"
+
 class CrashReporter : public QDialog
 {
     Q_OBJECT
@@ -57,6 +62,13 @@ public:
     const char* executablePath() const { return m_executablePath; }
     const char* applicationVersion() const { return m_applicationVersion; }
 
+    void setJiraConfiguration(
+            const QString& jiraHostname,
+            const QString& jiraUsername,
+            const QString& jiraPassword,
+            const QString& jiraProjectKey,
+            const QString& jiraTypeId);
+
 protected:
 
 private:
@@ -70,6 +82,11 @@ private:
     QNetworkReply * postRequest(const QString &path, const QJsonObject &json, const QVariant &headerValue);
     QNetworkReply * postRaw(const QString &path, QStringList files);
     void sendToJira();
+    QString jiraHostname;
+    QString jiraUsername;
+    QString jiraPassword;
+    QString jiraProjectKey;
+    QString jiraTypeId;
 
     QString m_minidump_file_path;
     QNetworkRequest* m_request;

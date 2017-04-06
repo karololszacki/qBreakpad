@@ -37,10 +37,19 @@ int main(int argc, char* argv[])
     reporter.setWindowTitle( applicationName + " Diagnostics");
     reporter.setText("<html><head/><body><p><span style=\"font-weight:600;\">Sorry!</span> " + applicationName + " stopped. Please tell us about it! We've created an error report for you that can help improve the stability in the future. You can now send this report directly to the " + applicationName + " developers.</p><p>Can you tell us what you were doing when this happened?</p></body></html>");
 
-    reporter.setReportData( "ProductName",  applicationName.toUtf8() );
-    reporter.setReportData( "Version", applicationVersion.toUtf8() );
-    reporter.setReportData( "BuildID", applicationBuild.toUtf8() );
-    reporter.setReportData( "ReleaseChannel", CRASHREPORTER_RELEASE_CHANNEL);
+    reporter.setReportData( REPORT_KEY_PRODUCT_NAME,  applicationName.toUtf8() );
+    reporter.setReportData( REPORT_KEY_VERSION, applicationVersion.toUtf8() );
+    reporter.setReportData( REPORT_KEY_BUILD_ID, applicationBuild.toUtf8() );
+    reporter.setReportData( REPORT_KEY_RELEASE_CHANNEL, CRASHREPORTER_RELEASE_CHANNEL);
+
+    if (app.arguments().size() >= 11) {
+        reporter.setJiraConfiguration(
+                    app.arguments().value( 6 ),
+                    app.arguments().value( 7 ),
+                    app.arguments().value( 8 ),
+                    app.arguments().value( 9 ),
+                    app.arguments().value( 10 ));
+    }
 
     reporter.show();
 

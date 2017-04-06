@@ -81,6 +81,12 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 //    if ( wcslen( executablePath ) == 0 )
 //        return false;
 
+    const wchar_t* jiraHostname = static_cast<QBreakpadHandler*>(context)->jiraHostnameWChar();
+    const wchar_t* jiraUsername = static_cast<QBreakpadHandler*>(context)->jiraUsernameWChar();
+    const wchar_t* jiraPassword = static_cast<QBreakpadHandler*>(context)->jiraPasswordWChar();
+    const wchar_t* jiraProjectKey = static_cast<QBreakpadHandler*>(context)->jiraProjectKeyWChar();
+    const wchar_t* jiraTypeId = static_cast<QBreakpadHandler*>(context)->jiraTypeIdWChar();
+
     wchar_t command[MAX_PATH * 5 + 6];
     wcscpy( command, crashReporter);
     wcscat( command, L" \"");
@@ -104,6 +110,33 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     if ( wcslen( executablePath ) > 0 ) {
         wcscat( command, L" \"");
         wcscat( command, executablePath );
+        wcscat( command, L"\"" );
+    }
+
+    if ( wcslen( jiraHostname ) > 0
+         && wcslen( jiraUsername ) > 0
+         && wcslen( jiraPassword ) > 0
+         && wcslen( jiraProjectKey ) > 0
+         && wcslen( jiraTypeId ) > 0) {
+
+        wcscat( command, L" \"");
+        wcscat( command, jiraHostname );
+        wcscat( command, L"\"" );
+
+        wcscat( command, L" \"");
+        wcscat( command, jiraUsername );
+        wcscat( command, L"\"" );
+
+        wcscat( command, L" \"");
+        wcscat( command, jiraPassword );
+        wcscat( command, L"\"" );
+
+        wcscat( command, L" \"");
+        wcscat( command, jiraProjectKey );
+        wcscat( command, L"\"" );
+
+        wcscat( command, L" \"");
+        wcscat( command, jiraTypeId );
         wcscat( command, L"\"" );
     }
 
@@ -143,6 +176,12 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 //    if ( strlen( executablePath ) == 0 )
 //        return false;
 
+    const char* jiraHostname = static_cast<QBreakpadHandler*>(context)->jiraHostname();
+    const char* jiraUsername = static_cast<QBreakpadHandler*>(context)->jiraUsername();
+    const char* jiraPassword = static_cast<QBreakpadHandler*>(context)->jiraPassword();
+    const char* jiraProjectKey = static_cast<QBreakpadHandler*>(context)->jiraProjectKey();
+    const char* jiraTypeId = static_cast<QBreakpadHandler*>(context)->jiraTypeId();
+
 #ifdef Q_OS_LINUX
     const char* path = descriptor.path();
 #else // Q_OS_MAC
@@ -172,6 +211,11 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
                applicationVersion,
                applicationBuild,
                executablePath,
+               jiraHostname,
+               jiraUsername,
+               jiraPassword,
+               jiraProjectKey,
+               jiraTypeId,
                (char*) 0 );
 
         // execl replaces this process, so no more code will be executed
@@ -363,6 +407,74 @@ void QBreakpadHandler::setApplicationData( const QCoreApplication* app, const QS
     wappbuild = new wchar_t[ wsappbuild.size() + 10 ];
     wcscpy( wappbuild, wsappbuild.c_str() );
     m_applicationBuildWChar = wappbuild;
+}
+
+void QBreakpadHandler::setJiraConfiguration(
+        const QString& jiraHostname,
+        const QString& jiraUsername,
+        const QString& jiraPassword,
+        const QString& jiraProjectKey,
+        const QString& jiraTypeId)
+{
+    char* cjiraHostname;
+    std::string sjiraHostname = jiraHostname.toStdString();
+    cjiraHostname = new char[ sjiraHostname.size() + 1 ];
+    strcpy( cjiraHostname, sjiraHostname.c_str() );
+    m_jiraHostname = cjiraHostname;
+
+    wchar_t* wjiraHostname;
+    std::wstring wsjiraHostname = jiraHostname.toStdWString();
+    wjiraHostname = new wchar_t[ wsjiraHostname.size() + 10 ];
+    wcscpy( wjiraHostname, wsjiraHostname.c_str() );
+    m_jiraHostnameWChar = wjiraHostname;
+
+    char* cjiraUsername;
+    std::string sjiraUsername = jiraUsername.toStdString();
+    cjiraUsername = new char[ sjiraUsername.size() + 1 ];
+    strcpy( cjiraUsername, sjiraUsername.c_str() );
+    m_jiraUsername = cjiraUsername;
+
+    wchar_t* wjiraUsername;
+    std::wstring wsjiraUsername = jiraUsername.toStdWString();
+    wjiraUsername = new wchar_t[ wsjiraUsername.size() + 10 ];
+    wcscpy( wjiraUsername, wsjiraUsername.c_str() );
+    m_jiraUsernameWChar = wjiraUsername;
+
+    char* cjiraPassword;
+    std::string sjiraPassword = jiraPassword.toStdString();
+    cjiraPassword = new char[ sjiraPassword.size() + 1 ];
+    strcpy( cjiraPassword, sjiraPassword.c_str() );
+    m_jiraPassword = cjiraPassword;
+
+    wchar_t* wjiraPassword;
+    std::wstring wsjiraPassword = jiraPassword.toStdWString();
+    wjiraPassword = new wchar_t[ wsjiraPassword.size() + 10 ];
+    wcscpy( wjiraPassword, wsjiraPassword.c_str() );
+    m_jiraPasswordWChar = wjiraPassword;
+
+    char* cjiraProjectKey;
+    std::string sjiraProjectKey = jiraProjectKey.toStdString();
+    cjiraProjectKey = new char[ sjiraProjectKey.size() + 1 ];
+    strcpy( cjiraProjectKey, sjiraProjectKey.c_str() );
+    m_jiraProjectKey = cjiraProjectKey;
+
+    wchar_t* wjiraProjectKey;
+    std::wstring wsjiraProjectKey = jiraProjectKey.toStdWString();
+    wjiraProjectKey = new wchar_t[ wsjiraProjectKey.size() + 10 ];
+    wcscpy( wjiraProjectKey, wsjiraProjectKey.c_str() );
+    m_jiraProjectKeyWChar = wjiraProjectKey;
+
+    char* cjiraTypeId;
+    std::string sjiraTypeId = jiraTypeId.toStdString();
+    cjiraTypeId = new char[ sjiraTypeId.size() + 1 ];
+    strcpy( cjiraTypeId, sjiraTypeId.c_str() );
+    m_jiraTypeId = cjiraTypeId;
+
+    wchar_t* wjiraTypeId;
+    std::wstring wsjiraTypeId = jiraTypeId.toStdWString();
+    wjiraTypeId = new wchar_t[ wsjiraTypeId.size() + 10 ];
+    wcscpy( wjiraTypeId, wsjiraTypeId.c_str() );
+    m_jiraTypeIdWChar = wjiraTypeId;
 }
 
 void QBreakpadHandler::sendDumps()

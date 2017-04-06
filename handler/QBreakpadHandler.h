@@ -62,6 +62,23 @@ public:
     const char* applicationBuild() const { return m_applicationBuild; }
     const wchar_t* applicationBuildWChar() const { return m_applicationBuildWChar; }
 
+    void setJiraConfiguration(
+            const QString& jiraHostname,
+            const QString& jiraUsername,
+            const QString& jiraPassword,
+            const QString& jiraProjectKey,
+            const QString& jiraTypeId);
+    const char* jiraHostname() const { return m_jiraHostname; }
+    const wchar_t* jiraHostnameWChar() const { return m_jiraHostnameWChar; }
+    const char* jiraUsername() const { return m_jiraUsername; }
+    const wchar_t* jiraUsernameWChar() const { return m_jiraUsernameWChar; }
+    const char* jiraPassword() const { return m_jiraPassword; }
+    const wchar_t* jiraPasswordWChar() const { return m_jiraPasswordWChar; }
+    const char* jiraProjectKey() const { return m_jiraProjectKey; }
+    const wchar_t* jiraProjectKeyWChar() const { return m_jiraProjectKeyWChar; }
+    const char* jiraTypeId() const { return m_jiraTypeId; }
+    const wchar_t* jiraTypeIdWChar() const { return m_jiraTypeIdWChar; }
+
 public slots:
     void sendDumps();
 
@@ -78,6 +95,17 @@ private:
     const wchar_t* m_applicationVersionWChar;
     const char* m_applicationBuild;
     const wchar_t* m_applicationBuildWChar;
+
+    const char* m_jiraHostname;
+    const wchar_t* m_jiraHostnameWChar;
+    const char* m_jiraUsername;
+    const wchar_t* m_jiraUsernameWChar;
+    const char* m_jiraPassword;
+    const wchar_t* m_jiraPasswordWChar;
+    const char* m_jiraProjectKey;
+    const wchar_t* m_jiraProjectKeyWChar;
+    const char* m_jiraTypeId;
+    const wchar_t* m_jiraTypeIdWChar;
 };
 #define QBreakpadInstance Singleton<QBreakpadHandler>::instance()
 

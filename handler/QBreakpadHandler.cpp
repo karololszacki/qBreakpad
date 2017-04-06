@@ -65,7 +65,8 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 #ifdef Q_OS_WIN
 
     const wchar_t* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterWChar();
-        if ( /*!s_active ||*/ wcslen( crashReporter ) == 0 )
+    if ( /*!s_active ||*/ wcslen( crashReporter ) == 0 )
+        return false;
 
     const wchar_t* applicationName = static_cast<QBreakpadHandler*>(context)->applicationNameWChar();
     if ( wcslen( applicationName ) == 0 )

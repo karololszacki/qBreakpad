@@ -79,7 +79,7 @@ private:
 
     void relaunchApplication();
 
-    QNetworkReply * postRequest(const QString &path, const QJsonObject &json, const QVariant &headerValue);
+    QNetworkReply * postRequest(const QString &path, const QJsonObject &json, const QVariant &headerValue="application/json");
     QNetworkReply * postRaw(const QString &path, QStringList files);
     void sendToJira();
     QString jiraHostname;

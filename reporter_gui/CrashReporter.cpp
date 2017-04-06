@@ -343,16 +343,17 @@ void CrashReporter::sendToJira()
 
     ticketObj["fields"] = fieldsObj;
 
-    QNetworkReply *reply = postRequest(API_ISSUE_PATH, ticketObj, {});
+    m_reply = postRequest(API_ISSUE_PATH, ticketObj);
 
-    connect(reply, &QNetworkReply::uploadProgress, this, &CrashReporter::onProgress);
+    connect(m_reply, &QNetworkReply::uploadProgress, this, &CrashReporter::onProgress);
 
-    connect(reply, &QNetworkReply::finished, [reply, files, this]() {
-        if (reply->error() != QNetworkReply::NoError) {
+    connect(m_reply, &QNetworkReply::finished, [files, this]() {
+        if (m_reply->error() != QNetworkReply::NoError) {
             // some error
-            onDone();
+//            onDone();
+            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + "\nsome error? " + m_reply->readAll());
         } else {
-            QByteArray strReply = reply->readAll();
+            QByteArray strReply = m_reply->readAll();
             QJsonObject responseObj = QJsonDocument::fromJson(strReply).object();
 
             QJsonValue value;
@@ -362,16 +363,13 @@ void CrashReporter::sendToJira()
                 QString ticketKey = value.toString();
 
                 if(!files.isEmpty()) {
-                    QMetaObject::Connection c2;
                     QNetworkReply *reply = postRaw(QString("%1%2/attachments").arg(API_ISSUE_PATH).arg(ticketKey), files);
-                    c2 = connect(reply, &QNetworkReply::finished, [reply, this, c2]() {
-                        disconnect(c2);
-
+                    connect(reply, &QNetworkReply::finished, [reply, this]() {
                         onDone();
 
                         if (reply->error() != QNetworkReply::NoError) {
                             // some error
-                            qDebug() << "attachment error: " << reply->error() << reply->readAll();
+                            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + "\nattachment error? " + reply->readAll());
                         }
                     });
                 } else {
@@ -414,7 +412,6 @@ QNetworkReply * CrashReporter::postRequest(const QString &path, const QJsonObjec
 
     QNetworkAccessManager* nam = new QNetworkAccessManager( this );
     return nam->post(request, buffer);
-    return NULL;
 }
 
 QNetworkReply * CrashReporter::postRaw(const QString &path, QStringList files)
@@ -451,5 +448,4 @@ QNetworkReply * CrashReporter::postRaw(const QString &path, QStringList files)
     QNetworkReply *reply = nam->post(request, multiPart);
     multiPart->setParent(reply);
     return reply;
-    return NULL;
 }

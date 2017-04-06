@@ -247,6 +247,7 @@ CrashReporter::handleOnDone(QByteArray replyBytes, const QString& ticketKey)
     }
     else
     {
+        QFile::remove(m_minidump_file_path);
         if (response.startsWith( "CrashID=" )) {
             QString crashId = response.split("\n").at(0).split("=").at(1);
 

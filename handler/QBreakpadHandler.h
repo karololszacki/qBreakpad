@@ -54,9 +54,13 @@ public:
 
     void setApplicationData( const QCoreApplication* app, const QString& appBuildString );
     const char* applicationName() const { return m_applicationName; }
+    const wchar_t* applicationNameWChar() const { return m_applicationNameWChar; }
     const char* executablePath() const { return m_executablePath; }
+    const wchar_t* executablePathWChar() const { return m_executablePathWChar; }
     const char* applicationVersion() const { return m_applicationVersion; }
+    const wchar_t* applicationVersionWChar() const { return m_applicationVersionWChar; }
     const char* applicationBuild() const { return m_applicationBuild; }
+    const wchar_t* applicationBuildWChar() const { return m_applicationBuildWChar; }
 
 public slots:
     void sendDumps();
@@ -67,9 +71,13 @@ private:
     const wchar_t* m_crashReporterWChar;
 
     const char* m_applicationName;
+    const wchar_t* m_applicationNameWChar;
     const char* m_executablePath;
+    const wchar_t* m_executablePathWChar;
     const char* m_applicationVersion;
+    const wchar_t* m_applicationVersionWChar;
     const char* m_applicationBuild;
+    const wchar_t* m_applicationBuildWChar;
 };
 #define QBreakpadInstance Singleton<QBreakpadHandler>::instance()
 

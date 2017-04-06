@@ -62,24 +62,23 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
         return false;
     }
 
-    const char* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterChar();
-    if ( /*!s_active ||*/ strlen( crashReporter ) == 0 )
-        return false;
-
-    const char* applicationName = static_cast<QBreakpadHandler*>(context)->applicationName();
-    if ( strlen( applicationName ) == 0 )
-        return false;
-    const char* applicationVersion = static_cast<QBreakpadHandler*>(context)->applicationVersion();
-    if ( strlen( applicationVersion ) == 0 )
-        return false;
-    const char* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuild();
-    if ( strlen( applicationBuild ) == 0 )
-        return false;
-    const char* executablePath = static_cast<QBreakpadHandler*>(context)->executablePath();
-//    if ( strlen( executablePath ) == 0 )
-//        return false;
-
 #ifdef Q_OS_WIN
+
+    const wchar_t* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterWChar();
+        if ( /*!s_active ||*/ wcslen( crashReporter ) == 0 )
+
+    const wchar_t* applicationName = static_cast<QBreakpadHandler*>(context)->applicationNameWChar();
+    if ( wcslen( applicationName ) == 0 )
+        return false;
+    const wchar_t* applicationVersion = static_cast<QBreakpadHandler*>(context)->applicationVersionWChar();
+    if ( wcslen( applicationVersion ) == 0 )
+        return false;
+    const wchar_t* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuildWChar();
+    if ( wcslen( applicationBuild ) == 0 )
+        return false;
+    const wchar_t* executablePath = static_cast<QBreakpadHandler*>(context)->executablePathWChar();
+//    if ( wcslen( executablePath ) == 0 )
+//        return false;
 
     wchar_t command[MAX_PATH * 5 + 6];
     wcscpy( command, crashReporter);
@@ -101,7 +100,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     wcscat( command, applicationBuild );
     wcscat( command, L"\"" );
 
-    if ( strlen( executablePath ) > 0 ) {
+    if ( wcslen( executablePath ) > 0 ) {
         wcscat( command, L" \"");
         wcscat( command, executablePath );
         wcscat( command, L"\"" );
@@ -125,6 +124,23 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 
     return succeeded;
 #else
+
+    const char* crashReporter = static_cast<QBreakpadHandler*>(context)->crashReporterChar();
+    if ( /*!s_active ||*/ strlen( crashReporter ) == 0 )
+        return false;
+
+    const char* applicationName = static_cast<QBreakpadHandler*>(context)->applicationName();
+    if ( strlen( applicationName ) == 0 )
+        return false;
+    const char* applicationVersion = static_cast<QBreakpadHandler*>(context)->applicationVersion();
+    if ( strlen( applicationVersion ) == 0 )
+        return false;
+    const char* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuild();
+    if ( strlen( applicationBuild ) == 0 )
+        return false;
+    const char* executablePath = static_cast<QBreakpadHandler*>(context)->executablePath();
+//    if ( strlen( executablePath ) == 0 )
+//        return false;
 
 #ifdef Q_OS_LINUX
     const char* path = descriptor.path();
@@ -255,7 +271,7 @@ void QBreakpadHandler::setCrashReporter( const QString& crashReporter )
     }
 
 
-    // cache reporter path as char*
+    // crash reporter path as char*
     char* creporter;
     std::string sreporter = crashReporterPath.toStdString();
     creporter = new char[ sreporter.size() + 1 ];
@@ -264,7 +280,7 @@ void QBreakpadHandler::setCrashReporter( const QString& crashReporter )
 
 //    qDebug() << "m_crashReporterChar: " << m_crashReporterChar;
 
-    // cache reporter path as wchart_t*
+    // crash reporter path as wchart_t*
     wchar_t* wreporter;
     std::wstring wsreporter = crashReporterPath.toStdWString();
     wreporter = new wchar_t[ wsreporter.size() + 10 ];
@@ -305,11 +321,23 @@ void QBreakpadHandler::setApplicationData( const QCoreApplication* app, const QS
     strcpy( cappname, sappname.c_str() );
     m_applicationName = cappname;
 
+    wchar_t* wappname;
+    std::wstring wsappname = app->applicationName().toStdWString();
+    wappname = new wchar_t[ wsappname.size() + 10 ];
+    wcscpy( wappname, wsappname.c_str() );
+    m_applicationNameWChar = wappname;
+
     char* cepath;
     std::string sepath = app->applicationFilePath().toStdString();
     cepath = new char[ sepath.size() + 1 ];
     strcpy( cepath, sepath.c_str() );
     m_executablePath = cepath;
+
+    wchar_t* wepath;
+    std::wstring wsepath = app->applicationFilePath().toStdWString();
+    wepath = new wchar_t[ wsepath.size() + 10 ];
+    wcscpy( wepath, wsepath.c_str() );
+    m_executablePathWChar = wepath;
 
     char* cappver;
     std::string sappver = app->applicationVersion().toStdString();
@@ -317,11 +345,23 @@ void QBreakpadHandler::setApplicationData( const QCoreApplication* app, const QS
     strcpy( cappver, sappver.c_str() );
     m_applicationVersion = cappver;
 
+    wchar_t* wappver;
+    std::wstring wsappver = app->applicationVersion().toStdWString();
+    wappver = new wchar_t[ wsappver.size() + 10 ];
+    wcscpy( wappver, wsappver.c_str() );
+    m_applicationVersionWChar = wappver;
+
     char* cappbuild;
     std::string sappbuild = appBuildString.toStdString();
     cappbuild = new char[ sappbuild.size() + 1 ];
     strcpy( cappbuild, sappbuild.c_str() );
     m_applicationBuild = cappbuild;
+
+    wchar_t* wappbuild;
+    std::wstring wsappbuild = appBuildString.toStdWString();
+    wappbuild = new wchar_t[ wsappbuild.size() + 10 ];
+    wcscpy( wappbuild, wsappbuild.c_str() );
+    m_applicationBuildWChar = wappbuild;
 }
 
 void QBreakpadHandler::sendDumps()

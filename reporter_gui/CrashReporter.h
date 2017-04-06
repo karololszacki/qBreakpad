@@ -67,6 +67,10 @@ private:
 
     void relaunchApplication();
 
+    QNetworkReply * postRequest(const QString &path, const QJsonObject &json, const QVariant &headerValue);
+    QNetworkReply * postRaw(const QString &path, QStringList files);
+    void sendToJira();
+
     QString m_minidump_file_path;
     QNetworkRequest* m_request;
     QNetworkReply* m_reply;

@@ -118,7 +118,7 @@ void CrashReporter::
 relaunchApplication()
 {
     if (relaunchEnabled && executablePath() != NULL) {
-        QProcess *process=new QProcess(this);
+        QProcess *process = new QProcess(this);
         bool res;
         process->startDetached(executablePath());
         res = process->waitForFinished();
@@ -319,13 +319,21 @@ void CrashReporter::setApplicationData( const QCoreApplication* app )
     m_applicationVersion = cappver;
 }
 
-void CrashReporter::setExecutablePath(const QString& executablePath )
+void CrashReporter::setExecutablePath(const QString& path )
 {
     char* cepath;
-    std::string sepath = executablePath.toStdString();
+    std::string sepath = path.toStdString();
     cepath = new char[ sepath.size() + 1 ];
     strcpy( cepath, sepath.c_str() );
     m_executablePath = cepath;
+
+
+
+    if (relaunchEnabled && executablePath() != NULL) {
+        m_ui->commentTextEdit->setPlainText(QString("ready to relaunch %1").arg(executablePath()));
+    } else {
+        m_ui->commentTextEdit->setPlainText("will not relaunch");
+    }
 }
 
 void CrashReporter::setJiraConfiguration(

@@ -123,7 +123,13 @@ relaunchApplication()
         m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + QString("\nlaunching %1").arg(QDir::toNativeSeparators(fi.absoluteFilePath())));
         QProcess *process = new QProcess(this);
         bool res;
-        process->startDetached(QDir::toNativeSeparators(fi.absoluteFilePath()));
+        if (process->startDetached(QDir::toNativeSeparators(fi.absoluteFilePath()))) {
+            // succeeded
+            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + " ... succeeded");
+        } else {
+            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + " ... failed");
+        }
+
         res = process->waitForFinished();
         delete process;
         process = NULL;

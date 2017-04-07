@@ -77,6 +77,11 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     const wchar_t* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuildWChar();
     if ( wcslen( applicationBuild ) == 0 )
         return false;
+
+    const wchar_t* sessionIdentifier = static_cast<QBreakpadHandler*>(context)->sessionIdentifierWChar();
+    if ( wcslen( sessionIdentifier ) == 0 )
+        return false;
+
     const wchar_t* executablePath = static_cast<QBreakpadHandler*>(context)->executablePathWChar();
 //    if ( wcslen( executablePath ) == 0 )
 //        return false;
@@ -105,6 +110,10 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 
     wcscat( command, L" \"");
     wcscat( command, applicationBuild );
+    wcscat( command, L"\"" );
+
+    wcscat( command, L" \"");
+    wcscat( command, sessionIdentifier );
     wcscat( command, L"\"" );
 
     if ( wcslen( executablePath ) > 0 ) {
@@ -172,6 +181,11 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
     const char* applicationBuild = static_cast<QBreakpadHandler*>(context)->applicationBuild();
     if ( strlen( applicationBuild ) == 0 )
         return false;
+
+    const char* sessionIdentifier = static_cast<QBreakpadHandler*>(context)->sessionIdentifier();
+    if ( strlen( sessionIdentifier ) == 0 )
+        return false;
+
     const char* executablePath = static_cast<QBreakpadHandler*>(context)->executablePath();
 //    if ( strlen( executablePath ) == 0 )
 //        return false;
@@ -210,6 +224,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
                applicationName,
                applicationVersion,
                applicationBuild,
+               sessionIdentifier,
                executablePath,
                jiraHostname,
                jiraUsername,
@@ -260,6 +275,21 @@ QBreakpadHandler::QBreakpadHandler() :
 QBreakpadHandler::~QBreakpadHandler()
 {
     delete d;
+}
+
+void QBreakpadHandler::setSessionIdentifier(const QString& sessionIdentifier)
+{
+    char* csessionIdentifier;
+    std::string ssessionIdentifier = sessionIdentifier.toStdString();
+    csessionIdentifier = new char[ ssessionIdentifier.size() + 1 ];
+    strcpy( csessionIdentifier, ssessionIdentifier.c_str() );
+    m_sessionIdentifier = csessionIdentifier;
+
+    wchar_t* wsessionIdentifier;
+    std::wstring wssessionIdentifier = sessionIdentifier.toStdWString();
+    wsessionIdentifier = new wchar_t[ wssessionIdentifier.size() + 10 ];
+    wcscpy( wsessionIdentifier, wssessionIdentifier.c_str() );
+    m_sessionIdentifierWChar = wsessionIdentifier;
 }
 
 void QBreakpadHandler::setDumpPathAndHandlerApp(const QString& dumpPath, const QString& handlerPath)

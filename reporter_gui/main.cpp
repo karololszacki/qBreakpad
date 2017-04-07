@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
     QApplication app(argc, argv);
 
-    if ( app.arguments().size() < 5 )
+    if ( app.arguments().size() < 6 )
     {
         std::cout << k_usage;
         return 1;
@@ -29,9 +29,10 @@ int main(int argc, char* argv[])
     QString applicationName = app.arguments().value( 2 );
     QString applicationVersion = app.arguments().value( 3 );
     QString applicationBuild = app.arguments().value( 4 );
+    QString sessionIdentifier = app.arguments().value( 5 );
 
-    if (app.arguments().size() >= 6) {
-        reporter.setExecutablePath(app.arguments().value( 5 ));
+    if (app.arguments().size() >= 7) {
+        reporter.setExecutablePath(app.arguments().value( 6 ));
     }
 
     reporter.setWindowTitle( applicationName + " Diagnostics");
@@ -41,14 +42,15 @@ int main(int argc, char* argv[])
     reporter.setReportData( REPORT_KEY_VERSION, applicationVersion.toUtf8() );
     reporter.setReportData( REPORT_KEY_BUILD_ID, applicationBuild.toUtf8() );
     reporter.setReportData( REPORT_KEY_RELEASE_CHANNEL, CRASHREPORTER_RELEASE_CHANNEL);
+    reporter.setReportData( REPORT_KEY_SESSION_ID, sessionIdentifier.toUtf8());
 
-    if (app.arguments().size() >= 11) {
+    if (app.arguments().size() >= 12) {
         reporter.setJiraConfiguration(
-                    app.arguments().value( 6 ),
                     app.arguments().value( 7 ),
                     app.arguments().value( 8 ),
                     app.arguments().value( 9 ),
-                    app.arguments().value( 10 ));
+                    app.arguments().value( 10 ),
+                    app.arguments().value( 11 ));
     }
 
     reporter.show();

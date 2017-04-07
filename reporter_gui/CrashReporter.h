@@ -40,6 +40,7 @@ class BacktraceGenerator;
 #define REPORT_KEY_VERSION          "Version"
 #define REPORT_KEY_BUILD_ID         "BuildID"
 #define REPORT_KEY_RELEASE_CHANNEL  "ReleaseChannel"
+#define REPORT_KEY_SESSION_ID       "SessionId"
 
 class CrashReporter : public QDialog
 {

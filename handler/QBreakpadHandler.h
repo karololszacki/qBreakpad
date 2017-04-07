@@ -62,6 +62,10 @@ public:
     const char* applicationBuild() const { return m_applicationBuild; }
     const wchar_t* applicationBuildWChar() const { return m_applicationBuildWChar; }
 
+    void setSessionIdentifier(const QString& sessionIdentifier);
+    const char* sessionIdentifier() const { return m_sessionIdentifier; }
+    const wchar_t* sessionIdentifierWChar() const { return m_sessionIdentifierWChar; }
+
     void setJiraConfiguration(
             const QString& jiraHostname,
             const QString& jiraUsername,
@@ -95,6 +99,9 @@ private:
     const wchar_t* m_applicationVersionWChar;
     const char* m_applicationBuild;
     const wchar_t* m_applicationBuildWChar;
+
+    const char* m_sessionIdentifier;
+    const wchar_t* m_sessionIdentifierWChar;
 
     const char* m_jiraHostname;
     const wchar_t* m_jiraHostnameWChar;

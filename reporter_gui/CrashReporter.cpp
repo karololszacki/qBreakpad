@@ -397,10 +397,13 @@ void CrashReporter::sendToJira()
 
     QJsonObject fieldsObj;
     fieldsObj["summary"] = QString(m_formContents.value(REPORT_KEY_PRODUCT_NAME)) + " Crash Report";
-    fieldsObj["description"] = m_ui->commentTextEdit->toPlainText() + "\n" +
-            QString(m_formContents.value(REPORT_KEY_PRODUCT_NAME)) + " " +
+    fieldsObj["description"] = m_ui->commentTextEdit->toPlainText() + "\n\n" +
+            QString("App: " + m_formContents.value(REPORT_KEY_PRODUCT_NAME)) + " " +
             QString(m_formContents.value(REPORT_KEY_VERSION)) + " " +
-            QString(m_formContents.value(REPORT_KEY_BUILD_ID));
+            QString(m_formContents.value(REPORT_KEY_BUILD_ID)) + "\n" +
+            QString("Session: " + m_formContents.value(REPORT_KEY_SESSION_ID)) + "\n" +
+            "Environment: " + QSysInfo::prettyProductName() + " " +
+            QSysInfo::currentCpuArchitecture();
 
     QJsonObject projectObj;
     projectObj["key"] = jiraProjectKey;

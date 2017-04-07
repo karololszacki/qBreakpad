@@ -119,11 +119,44 @@ relaunchApplication()
 {
     if (relaunchEnabled && executablePath() != NULL) {
         QFileInfo fi = QFileInfo(executablePath());
+        QString fullPath = QDir::toNativeSeparators(fi.absoluteFilePath());
+
+#ifdef Q_OS_WIN
+        const wchar_t* fullPathWChar;
+
+        wchar_t* wfullPath;
+        std::wstring wsfullPath = fullPath.toStdWString();
+        wfullPath = new wchar_t[ wsfullPath.size() + 10 ];
+        wcscpy( wfullPath, wsfullPath.c_str() );
+        fullPathWChar = wfullPath;
+
+        if ( wcslen( fullPathWChar ) == 0 )
+            return;
+
+        wchar_t command[MAX_PATH * 5 + 6];
+        wcscpy( command, fullPathWChar);
+
+        STARTUPINFO si;
+        PROCESS_INFORMATION pi;
+
+        ZeroMemory( &si, sizeof( si ) );
+        si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_SHOWNORMAL;
+        ZeroMemory( &pi, sizeof(pi) );
+
+        if ( CreateProcess( NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ) )
+        {
+            CloseHandle( pi.hProcess );
+            CloseHandle( pi.hThread );
+//            TerminateProcess( GetCurrentProcess(), 1 );
+        }
+#else
 
         m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + QString("\nlaunching %1").arg(QDir::toNativeSeparators(fi.absoluteFilePath())));
         QProcess *process = new QProcess(this);
         bool res;
-        if (process->startDetached(QDir::toNativeSeparators(fi.absoluteFilePath()))) {
+        if (process->startDetached(fullPath)) {
             // succeeded
             m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + " ... succeeded");
         } else {
@@ -133,6 +166,7 @@ relaunchApplication()
         res = process->waitForFinished();
         delete process;
         process = NULL;
+#endif
     }
 }
 

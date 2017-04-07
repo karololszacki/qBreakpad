@@ -26,6 +26,11 @@
 #include <csignal> // POSIX kill
 #endif
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <rpc.h>
+#endif
+
 #include <QIcon>
 #include <QDebug>
 #include <QTimer>

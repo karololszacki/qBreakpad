@@ -163,9 +163,7 @@ relaunchApplication()
         bool res;
         if (process->startDetached(fullPath)) {
             // succeeded
-            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + " ... succeeded");
         } else {
-            m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + " ... failed");
         }
 
         res = process->waitForFinished();
@@ -374,16 +372,6 @@ void CrashReporter::setExecutablePath(const QString& path )
     cepath = new char[ sepath.size() + 1 ];
     strcpy( cepath, sepath.c_str() );
     m_executablePath = cepath;
-
-
-
-    if (relaunchEnabled && executablePath() != NULL) {
-        m_ui->commentTextEdit->setPlainText(QString("ready to relaunch %1").arg(executablePath()));
-    } else {
-        m_ui->commentTextEdit->setPlainText("will not relaunch");
-    }
-
-    relaunchApplication();
 }
 
 void CrashReporter::setJiraConfiguration(

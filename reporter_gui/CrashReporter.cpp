@@ -118,9 +118,12 @@ void CrashReporter::
 relaunchApplication()
 {
     if (relaunchEnabled && executablePath() != NULL) {
+        QFileInfo fi = QFileInfo(executablePath());
+
+        m_ui->commentTextEdit->setPlainText(m_ui->commentTextEdit->toPlainText() + QString("\nlaunching %1").arg(QDir::toNativeSeparators(fi.absoluteFilePath())));
         QProcess *process = new QProcess(this);
         bool res;
-        process->startDetached(executablePath());
+        process->startDetached(QDir::toNativeSeparators(fi.absoluteFilePath()));
         res = process->waitForFinished();
         delete process;
         process = NULL;
@@ -334,6 +337,8 @@ void CrashReporter::setExecutablePath(const QString& path )
     } else {
         m_ui->commentTextEdit->setPlainText("will not relaunch");
     }
+
+    relaunchApplication();
 }
 
 void CrashReporter::setJiraConfiguration(

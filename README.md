@@ -10,11 +10,20 @@ Supports
 
 How to use
 ----------------
+
 * Clone repository recursively
 ```bash
 $ git clone --recursive https://github.com/buzzySmile/qBreakpad.git
 ```
 * Build qBreakpad static library (qBreakpad/handler/)
+
+```
+cd $HOME/work/my-app/src/qBreakpad
+"$HOME/Qt/5.8/clang_64/bin/qmake" $HOME/work/my-app/src/qBreakpad/qBreakpad.pro -spec macx-clang CONFIG+=debug CONFIG+=x86_64 CONFIG+=qml_debug
+"/usr/bin/make" qmake_all
+make
+```
+
 * Include "qBreakpad-handler.pri" to your target Qt project
 ```c++
 include(libs/qBreakpad/qBreakpad-handler.pri)

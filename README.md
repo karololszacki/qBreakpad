@@ -79,6 +79,26 @@ int main(int argc, char* argv[])
 
 * Read Google Breakpad documentation to know further workflow
 
+## Generate symbol file 
+
+Firstly, we need to build the dump_syms executable.
+
+```
+PROJECT_ROOT=$HOME/work/my-app
+DUMP_SYMS_SOURCE_DIR=${PROJECT_ROOT}/src/qBreakpad/third_party/breakpad/src/tools/mac/dump_syms
+
+cd ${DUMP_SYMS_SOURCE_DIR}
+xcodebuild -project dump_syms.xcodeproj -configuration Release
+
+DUMP_SYMS_BUILD_DIR=${DUMP_SYMS_SOURCE_DIR}/build/Release
+
+cd ${PROJECT_ROOT}/build
+for macho in `find . |grep "\.o$"`; do
+    ${DUMP_SYMS_BUILD_DIR}/dump_syms $macho >> ${PROJECT_ROOT}/build/my-app.breadpad
+done
+
+```
+
 ## Getting started with Google Breakpad
 
 https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/getting_started_with_breakpad.md

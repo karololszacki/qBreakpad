@@ -99,6 +99,15 @@ done
 
 ```
 
+## Build Breadpad processors
+
+Follow the steps mentioned on this page: https://github.com/google/breakpad, and then we will get:
+
+```
+src/processor/minidump_stackwalk
+src/processor/minidump_dump
+```
+
 ## Getting started with Google Breakpad
 
 https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/getting_started_with_breakpad.md

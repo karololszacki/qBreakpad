@@ -50,7 +50,13 @@ if [[ $rc == 0 ]]; then echo -e "\033[0;32mBreakpad: BUILD SUCCESSFUL\033[0m\n";
 To run the demo project, open qBreakpad.pro in Qt Creator as a separate project, and then configure build directory of all build configurations to:
 
 ```
-$HOME/work/my-app/build/qBreakpad
+On Mac:
+
+$HOME/work/my-app/src/qBreakpad/build
+
+On Windows:
+
+C:\work\my-app\src\qBreakpad\build
 ```
 
 After that, you can build and run demo apps in Qt Creator.

@@ -7,11 +7,10 @@ CONFIG += warn_on thread exceptions rtti stl
 QT -= gui
 QT += core network
 
-OBJECTS_DIR = _build/obj
-MOC_DIR = _build
-win32 {
-    DESTDIR = $$OUT_PWD
-}
+message()
+message("----------------- qBreakpad -----------------")
+
+include ($$PWD/../qtcompilercheck.pri)
 
 ### qBreakpad config
 include($$PWD/../config.pri)
@@ -22,9 +21,7 @@ include($$PWD/../third_party/breakpad.pri)
 HEADERS += \
     $$PWD/singletone/call_once.h \
     $$PWD/singletone/singleton.h \
-    $$PWD/QBreakpadHandler.h \
-    $$PWD/QBreakpadHttpUploader.h
+    $$PWD/QBreakpadHandler.h
 
 SOURCES += \
-    $$PWD/QBreakpadHandler.cpp \
-    $$PWD/QBreakpadHttpUploader.cpp
+    $$PWD/QBreakpadHandler.cpp

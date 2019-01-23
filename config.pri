@@ -1,5 +1,5 @@
 CONFIG += static
-CONFIG += release
+#CONFIG += release
 
 macx {
     CONFIG += c++11

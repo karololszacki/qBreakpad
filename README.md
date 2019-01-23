@@ -14,7 +14,7 @@ Supports
 
 ```bash
 cd ~/work/my-project/src
-git submodule add git@github.com:jiakuan/qBreakpad.git
+git submodule add git@github.com:karololszacki/qBreakpad.git
 git submodule update --init --recursive
 ```
 

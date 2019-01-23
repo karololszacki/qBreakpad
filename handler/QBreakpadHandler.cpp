@@ -309,14 +309,12 @@ void QBreakpadHandler::setDumpPathAndHandlerApp(const QString& dumpPath, const Q
     d->dumpPath = absPath;
 
     #if defined Q_OS_LINUX
-    m_crash_handler =  new google_breakpad::ExceptionHandler(
-                           google_breakpad::MinidumpDescriptor( absPath.toStdString() ),
-                           NULL,
-                           DumpCallback,
-                           this,
-                           true,
-                           -1 );
-    m_crash_handler->set_crash_handler(GetCrashInfo);
+    d->pExptHandler = new google_breakpad::ExceptionHandler(google_breakpad::MinidumpDescriptor(absPath.toStdString()),
+                                                            /*FilterCallback*/ 0,
+                                                            DumpCallback,
+                                                            /*context*/ 0,
+                                                            true,
+                                                            -1);
     #elif defined Q_OS_MAC
     d->pExptHandler =  new google_breakpad::ExceptionHandler( absPath.toStdString(), NULL, DumpCallback, this, true, NULL);
     #elif defined Q_OS_WIN
@@ -326,7 +324,7 @@ void QBreakpadHandler::setDumpPathAndHandlerApp(const QString& dumpPath, const Q
 
     setCrashReporter( handlerPath );
     #ifdef Q_OS_LINUX
-    setApplicationData( qApp );
+    setApplicationData( qApp, applicationBuild() );
     #endif
 }
 

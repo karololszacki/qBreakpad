@@ -26,6 +26,7 @@
 void buggyFunc()
 {
     delete reinterpret_cast<QString*>(0xFEE1DEAD);
+    return 0;
 }
 
 void f3(int);
@@ -37,16 +38,19 @@ void f1(int i)
     } else {
         buggyFunc();
     }
+    return 0;
 }
 
 void f2(int i)
 {
     f1( i>0 ? i-1 : i);
+    return 0;
 }
 
 void f3(int i)
 {
     f2( i>0 ? i-1 : i );
+    return 0;
 }
 
 int main(int argc, char* argv[])

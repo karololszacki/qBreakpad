@@ -1,6 +1,22 @@
-# qBreakpad
+# This is abandoned
 
-[![Build status](https://travis-ci.org/buzzySmile/qBreakpad.svg?branch=master)](https://travis-ci.org/buzzySmile/qBreakpad)
+
+Check out [qt-breakpad](https://github.com/karololszacki/qt-breakpad).
+
+It uses CMake instead of Qt's qmake, and is using latest breakpad.
+
+It also has a demo app that crashes itself.
+
+And it is actually checked on Linux and Windows. And it <b>just works<sup>tm</sup></b>.
+
+
+---
+---
+---
+---
+---
+
+# qBreakpad
 
 qBreakpad is Qt library to use google-breakpad crash reporting facilities (and using it conviniently).
 Supports

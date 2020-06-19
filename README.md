@@ -1,7 +1,7 @@
 # This is abandoned
 
 
-Check out [qt-breakpad](https://github.com/karololszacki/qt-breakpad).
+Check out [qt-breakpad](https://github.com/KandaoVR/qt-breakpad).
 
 It uses CMake instead of Qt's qmake, and is using latest breakpad.
 
